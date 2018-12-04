@@ -30,6 +30,8 @@ export default class EmptyTab extends Component {
           <button onClick={ () => onAction('create-dmn-diagram') }>DMN diagram</button>
           <span> or </span>
           <button onClick={ () => onAction('create-cmmn-diagram') }>CMMN diagram</button>
+          <span> or </span>
+          <button onClick={ () => onAction('create-zeebe-diagram') }>Zeebe BPMN diagram</button>
         </p>
 
         <Slot name="empty-tab-buttons" />

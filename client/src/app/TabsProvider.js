@@ -3,6 +3,7 @@ import Ids from 'ids';
 import bpmnDiagram from './tabs/bpmn/diagram.bpmn';
 import cmmnDiagram from './tabs/cmmn/diagram.cmmn';
 import dmnDiagram from './tabs/dmn/diagram.dmn';
+import zeebeDiagram from './tabs/zeebe/diagram.bpmn';
 import dmnTable from './tabs/dmn/table.dmn';
 
 import EmptyTab from './EmptyTab';
@@ -150,6 +151,34 @@ export default class TabsProvider {
           }, {
             label: 'DMN Diagram',
             action: 'create-dmn-diagram'
+          }];
+        }
+      },
+      zeebe: {
+        name: 'Zeebe',
+        encoding: ENCODING_UTF8,
+        exports: {
+          jpg: EXPORT_JPG,
+          png: EXPORT_PNG,
+          svg: EXPORT_SVG
+        },
+        extensions: [ 'zeebe', 'xml' ],
+        getComponent(options) {
+          return import('./tabs/zeebe');
+        },
+        getInitialContents(options) {
+          return zeebeDiagram;
+        },
+        getHelpMenu() {
+          return [{
+            label: 'Zeebe Modeling Tutorial',
+            action: 'https://docs.zeebe.io/bpmn-modeler/introduction.html'
+          }];
+        },
+        getNewFileMenu() {
+          return [{
+            label: 'Zeebe Diagram',
+            action: 'create-zeebe-diagram'
           }];
         }
       }

@@ -1150,6 +1150,10 @@ export class App extends Component {
       return this.createDiagram('cmmn');
     }
 
+    if (action === 'create-zeebe-diagram') {
+      return this.createDiagram('zeebe');
+    }
+
     if (action === 'open-diagram') {
       return this.showOpenFilesDialog();
     }
@@ -1307,6 +1311,10 @@ export class App extends Component {
                 {
                   text: 'Create new CMMN diagram',
                   onClick: this.composeAction('create-cmmn-diagram')
+                },
+                {
+                  text: 'Create new Zeebe diagram',
+                  onClick: this.composeAction('create-zeebe-diagram')
                 }
               ] }
             >
