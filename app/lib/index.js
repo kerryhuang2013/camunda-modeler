@@ -45,7 +45,7 @@ Platform.create(process.platform, app, config);
 app.developmentMode = false;
 
 app.version = require('../package').version;
-app.name = 'Camunda Modeler';
+app.name = process.env.APP_NAME || 'Camunda Modeler';
 
 // this is shared variable between main and renderer processes
 global.metaData = {
@@ -315,7 +315,7 @@ app.createEditorWindow = function() {
   var windowOptions = {
     resizable: true,
     show: false,
-    title: 'Camunda Modeler'
+    title: process.env.APP_NAME || 'Camunda Modeler'
   };
 
   if (process.platform === 'linux') {
