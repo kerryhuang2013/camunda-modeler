@@ -49,9 +49,9 @@ const EXPORT_SVG = {
  */
 export default class TabsProvider {
 
-  constructor() {
+  constructor(props) {
 
-    this.providers = {
+    const defaultProviders = {
       empty: {
         getComponent() {
           return EmptyTab;
@@ -155,6 +155,8 @@ export default class TabsProvider {
       }
     };
 
+
+    this.providers = props.providers || defaultProviders;
   }
 
   getProviderNames() {
