@@ -36,10 +36,14 @@ import {
   replaceNamespace
 } from './util/namespace';
 
+import { isString } from 'min-dash';
+
 const NAMESPACE_URL_ACTIVITI = 'http://activiti.org/bpmn',
       NAMESPACE_URL_CAMUNDA = 'http://camunda.org/schema/1.0/bpmn',
       NAMESPACE_PREFIX_ACTIVITI = 'activiti',
       NAMESPACE_PREFIX_CAMUNDA = 'camunda';
+
+const EXPORT_AS = [ 'svg', 'png' ];
 
 const COLORS = [{
   title: 'White',
@@ -125,8 +129,8 @@ export class BpmnEditor extends CachedComponent {
     propertiesPanel.detach();
   }
 
-  componentDidUpdate() {
-    if (!this.state.importing) {
+  componentDidUpdate(prevProps) {
+    if (!isImporting(this.state) && isXMLChange(prevProps.xml, this.props.xml)) {
       this.checkImport();
     }
   }
@@ -249,14 +253,19 @@ export class BpmnEditor extends CachedComponent {
       xml
     } = this.props;
 
-    const {
-      modeler
-    } = this.getCached();
+    const { modeler } = this.getCached();
+
+    const commandStack = modeler.get('commandStack');
+
+    const stackIdx = commandStack._stackIdx;
 
     onImport(error, warnings);
 
     if (!error) {
-      modeler.lastXML = xml;
+      this.setCached({
+        lastXML: xml,
+        stackIdx
+      });
 
       this.setState({
         importing: false
@@ -265,7 +274,7 @@ export class BpmnEditor extends CachedComponent {
   }
 
 
-  handleChanged = (event = {}) => {
+  handleChanged = () => {
     const {
       modeler
     } = this.getCached();
@@ -273,6 +282,8 @@ export class BpmnEditor extends CachedComponent {
     const {
       onChanged
     } = this.props;
+
+    const dirty = this.checkDirty();
 
     const commandStack = modeler.get('commandStack');
     const selection = modeler.get('selection');
@@ -287,9 +298,10 @@ export class BpmnEditor extends CachedComponent {
       copy: !!selectionLength,
       cut: false,
       defaultCopyCutPaste: inputActive,
+      dirty,
       distribute: selectionLength > 2,
       editLabel: !inputActive && !!selectionLength,
-      exportAs: [ 'svg', 'png' ],
+      exportAs: EXPORT_AS,
       find: !inputActive,
       globalConnectTool: !inputActive,
       handTool: !inputActive,
@@ -328,17 +340,27 @@ export class BpmnEditor extends CachedComponent {
     this.setState(newState);
   }
 
+  checkDirty() {
+    const {
+      modeler,
+      stackIdx
+    } = this.getCached();
+
+    const commandStack = modeler.get('commandStack');
+
+    return commandStack._stackIdx !== stackIdx;
+  }
+
   async checkImport() {
     const {
+      lastXML,
       modeler,
       namespaceDialogShown
     } = this.getCached();
 
-    let {
-      xml
-    } = this.props;
+    let { xml } = this.props;
 
-    if (xml !== modeler.lastXML) {
+    if (isXMLChange(lastXML, xml)) {
       this.setState({
         importing: true
       });
@@ -363,12 +385,18 @@ export class BpmnEditor extends CachedComponent {
       modeler
     } = this.getCached();
 
+    const commandStack = modeler.get('commandStack');
+
+    const stackIdx = commandStack._stackIdx;
+
     return new Promise((resolve, reject) => {
 
       // TODO(nikku): set current modeler version and name to the diagram
-
       modeler.saveXML({ format: true }, (err, xml) => {
-        modeler.lastXML = xml;
+        this.setCached({
+          lastXML: xml,
+          stackIdx
+        });
 
         if (err) {
           this.handleError({
@@ -610,11 +638,17 @@ export class BpmnEditor extends CachedComponent {
       position: 'absolute'
     });
 
+    const commandStack = modeler.get('commandStack');
+
+    const stackIdx = commandStack._stackIdx;
+
     return {
-      modeler,
       __destroy: () => {
         modeler.destroy();
-      }
+      },
+      lastXML: null,
+      modeler,
+      stackIdx
     };
   }
 
@@ -664,4 +698,20 @@ function getNamespaceDialog() {
       '<camunda> namespace support works from Camunda BPM versions 7.4.0, 7.3.3, 7.2.6 onwards.'
     ].join('\n')
   };
+}
+
+function isImporting(state) {
+  return state.importing;
+}
+
+function isXMLChange(prevXML, xml) {
+  return trim(prevXML) !== trim(xml);
+}
+
+function trim(string) {
+  if (isString(string)) {
+    return string.trim();
+  }
+
+  return string;
 }

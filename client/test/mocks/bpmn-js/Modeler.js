@@ -1,9 +1,35 @@
 import { assign } from 'min-dash';
 
 class CommandStack {
-  canRedo() {}
+  constructor() {
+    this._stackIdx = -1;
+    this._maxStackIdx = this._stackIdx;
+  }
 
-  canUndo() {}
+  execute(commands) {
+    this._stackIdx += commands;
+    this._maxStackIdx = this._stackIdx;
+  }
+
+  undo() {
+    if (this.canUndo()) {
+      this._stackIdx--;
+    }
+  }
+
+  redo() {
+    if (this.canRedo()) {
+      this._stackIdx++;
+    }
+  }
+
+  canRedo() {
+    return this._stackIdx < this._maxStackIdx;
+  }
+
+  canUndo() {
+    return this._stackIdx > -1;
+  }
 }
 
 class PropertiesPanel {
