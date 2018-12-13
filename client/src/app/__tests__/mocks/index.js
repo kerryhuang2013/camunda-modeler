@@ -39,10 +39,11 @@ class FakeTab extends Component {
 
   componentDidMount() {
     const {
-      onShown
+      onShown,
+      tab
     } = this.props;
 
-    onShown();
+    onShown(tab);
   }
 
   componentDidUpdate() {
@@ -59,6 +60,12 @@ class FakeTab extends Component {
   triggerAction(action, options) {
     console.log('FakeTab#triggerAction', action, options);
 
+    const {
+      onError,
+      onWarning,
+      tab
+    } = this.props;
+
     if (action === 'save') {
       return 'CONTENTS';
     }
@@ -68,11 +75,11 @@ class FakeTab extends Component {
     }
 
     if (action === 'error') {
-      this.props.onError(options);
+      onError(tab, options);
     }
 
     if (action === 'warning') {
-      this.props.onWarning(options);
+      onWarning(tab, options);
     }
 
     if (action === 'errorThrow') {
@@ -330,17 +337,23 @@ export class Backend extends Mock {
     }
   }
 
-  sendMenuUpdate() {}
-
-  sendQuitAllowed() {}
-
   on(event, callback) {
     this.listeners[event] = callback.bind(this);
   }
 
+  off() {}
+
   once() {}
 
-  off() {}
+  sendQuitAllowed() {}
+
+  sendQuitAborted() {}
+
+  sendReady() {}
+
+  showContextMenu() {}
+
+  sendMenuUpdate() {}
 
   registerMenu = () => Promise.resolve()
 

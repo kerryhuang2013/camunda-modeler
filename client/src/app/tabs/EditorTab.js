@@ -22,7 +22,12 @@ export function createTab(tabName, providers) {
     }
 
     componentDidMount() {
-      this.props.onShown();
+      const {
+        onShown,
+        tab
+      } = this.props;
+
+      onShown(tab);
     }
 
     render() {

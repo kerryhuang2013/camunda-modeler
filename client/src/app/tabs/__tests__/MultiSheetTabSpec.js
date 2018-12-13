@@ -67,6 +67,8 @@ describe('<MultiSheetTab>', function() {
         onWarning: warningSpy
       });
 
+      const { tab } = instance.props;
+
       // when
       const warnings = [ 'warning', 'warning' ];
 
@@ -74,8 +76,9 @@ describe('<MultiSheetTab>', function() {
 
       // then
       expect(errorSpy).not.to.have.been.called;
+
       expect(warningSpy).to.have.been.calledTwice;
-      expect(warningSpy.alwaysCalledWith('warning')).to.be.true;
+      expect(warningSpy.alwaysCalledWith(tab, 'warning')).to.be.true;
     });
 
 
@@ -92,6 +95,8 @@ describe('<MultiSheetTab>', function() {
         onWarning: warningSpy
       });
 
+      const { tab } = instance.props;
+
       const showImportErrorDialogSpy = spy(instance, 'showImportErrorDialog');
 
       // when
@@ -100,8 +105,10 @@ describe('<MultiSheetTab>', function() {
       instance.handleImport(error);
 
       // then
-      expect(errorSpy).to.have.been.calledWith(error);
+      expect(errorSpy).to.have.been.calledWith(tab, error);
+
       expect(warningSpy).not.to.have.been.called;
+
       expect(showImportErrorDialogSpy).to.have.been.called;
     });
 

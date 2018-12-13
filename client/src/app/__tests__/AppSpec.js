@@ -55,7 +55,7 @@ describe('<App>', function() {
         });
 
         // when
-        app.handleTabChanged()();
+        app.handleTabChanged();
 
         // then
         expect(updateMenuSpy).to.have.been.called;
@@ -788,7 +788,7 @@ describe('<App>', function() {
       const updateSpy = spy(app, 'updateTab');
 
       // when
-      app.handleTabContentUpdated(tab)({
+      app.handleTabContentUpdated(tab, {
         newContent: '< bar/>'
       });
 
@@ -803,7 +803,7 @@ describe('<App>', function() {
       const updateSpy = spy(app, 'updateTab');
 
       // when
-      app.handleTabContentUpdated(tab)();
+      app.handleTabContentUpdated(tab);
 
       // then
       expect(updateSpy).to.not.have.been.called;
@@ -822,7 +822,7 @@ describe('<App>', function() {
       const onTabChanged = spy(function(tab, oldTab) {
         events.push([ 'tab-changed', tab ]);
 
-        app.handleTabShown(tab)();
+        app.handleTabShown(tab);
       });
 
       const onTabShown = spy(function(tab) {
@@ -1993,16 +1993,16 @@ function createApp(options = {}, mountFn=shallow) {
   const tabsProvider = options.tabsProvider || new TabsProvider();
 
   const defaultOnTabChanged = mountFn === shallow && function(newTab) {
-    app.handleTabShown(newTab)();
+    app.handleTabShown(newTab);
   };
 
   const onTabChanged = options.onTabChanged || defaultOnTabChanged;
 
-  const onWorkspaceChanged = options.onWorkspaceChanged;
   const onTabShown = options.onTabShown || function() {
     tree.update();
   };
 
+  const onWorkspaceChanged = options.onWorkspaceChanged;
   const onMenuUpdate = options.onMenuUpdate;
   const onReady = options.onReady;
   const onError = options.onError;

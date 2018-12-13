@@ -62,40 +62,56 @@ export class MultiSheetTab extends CachedComponent {
   }
 
   handleChanged = (newState) => {
-
     const {
       onChanged,
-      xml
+      tab
     } = this.props;
 
-    const {
+    const dirty = this.checkDirty(newState);
+
+    onChanged(tab, {
+      ...newState,
       dirty
-    } = newState;
-
-    const { lastXML } = this.getCached();
-
-    onChanged(
-      {
-        ...newState,
-        dirty: dirty || (lastXML ? (xml !== lastXML) : false)
-      }
-    );
+    });
   }
 
   handleError = (error) => {
     const {
-      onError
+      onError,
+      tab
     } = this.props;
 
-    onError(error);
+    onError(tab, error);
   }
 
   handleWarning = (warning) => {
     const {
-      onWarning
+      onWarning,
+      tab
     } = this.props;
 
-    onWarning(warning);
+    onWarning(tab, warning);
+  }
+
+  /**
+   * Check wether or not tab is dirty.
+   *
+   * @param {Object} state - Editor state.
+   *
+   * @returns {boolean}
+   */
+  checkDirty(state) {
+    const { dirty } = state;
+
+    if (dirty) {
+      return true;
+    }
+
+    const { xml } = this.props;
+
+    const { lastXML } = this.getCached();
+
+    return xml !== lastXML;
   }
 
   async showImportErrorDialog(error) {
@@ -277,6 +293,17 @@ export class MultiSheetTab extends CachedComponent {
 
   }
 
+  handleContentUpdated(newContent) {
+    const {
+      onContentUpdated,
+      tab
+    } = this.props;
+
+    if (isFunction(onContentUpdated)) {
+      onContentUpdated(tab, newContent);
+    }
+  }
+
   render() {
 
     let {
@@ -289,8 +316,7 @@ export class MultiSheetTab extends CachedComponent {
       id,
       xml,
       layout,
-      onAction,
-      onContentUpdated
+      onAction
     } = this.props;
 
     if (!sheets) {
@@ -316,7 +342,7 @@ export class MultiSheetTab extends CachedComponent {
             onContextMenu={ this.handleContextMenu }
             onAction={ onAction }
             onChanged={ this.handleChanged }
-            onContentUpdated={ onContentUpdated }
+            onContentUpdated={ this.onContentUpdated }
             onError={ this.handleError }
             onImport={ this.handleImport }
             onLayoutChanged={ this.handleLayoutChanged }

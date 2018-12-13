@@ -621,7 +621,7 @@ export class App extends Component {
    *
    * @return {Function} tab shown callback
    */
-  handleTabShown = (tab) => () => {
+  handleTabShown = (tab) => {
 
     const {
       openedTabs,
@@ -651,7 +651,7 @@ export class App extends Component {
    *
    * @return {Function} tab error callback
    */
-  handleTabError = (tab) => (error) => {
+  handleTabError = (tab, error) => {
     this.handleError(error, tab);
   }
 
@@ -662,18 +662,16 @@ export class App extends Component {
    *
    * @return {Function} tab warning callback
    */
-  handleTabWarning = (tab) => (warning) => {
+  handleTabWarning = (tab, warning) => {
     this.handleWarning(warning, tab);
   }
 
   /**
    * Handle tab changed.
    *
-   * @param {Object} tab descriptor
-   *
-   * @return {Function} tab changed callback
+   * @returns {Function}
    */
-  handleTabChanged = (tab) => (properties = {}) => {
+  handleTabChanged = (tab, properties = {}) => {
 
     let {
       dirtyTabs,
@@ -684,7 +682,7 @@ export class App extends Component {
 
       const newDirtyTabs = {
         ...dirtyTabs,
-        [tab.id]: properties.dirty
+        [ tab.id ]: properties.dirty
       };
 
       this.setState({
@@ -709,8 +707,7 @@ export class App extends Component {
    *
    * @param {String} new tab content
    */
-  handleTabContentUpdated = (tab) => (newContent) => {
-
+  handleTabContentUpdated = (tab, newContent) => {
     if (!newContent) {
       return;
     }
@@ -1388,11 +1385,11 @@ export class App extends Component {
                   key={ activeTab.id }
                   tab={ activeTab }
                   layout={ layout }
-                  onChanged={ this.handleTabChanged(activeTab) }
-                  onContentUpdated={ this.handleTabContentUpdated(activeTab) }
-                  onError={ this.handleTabError(activeTab) }
-                  onWarning={ this.handleTabWarning(activeTab) }
-                  onShown={ this.handleTabShown(activeTab) }
+                  onChanged={ this.handleTabChanged }
+                  onContentUpdated={ this.handleTabContentUpdated }
+                  onError={ this.handleTabError }
+                  onWarning={ this.handleTabWarning }
+                  onShown={ this.handleTabShown }
                   onLayoutChanged={ this.handleLayoutChanged }
                   onContextMenu={ this.openTabMenu }
                   onAction={ this.triggerAction }

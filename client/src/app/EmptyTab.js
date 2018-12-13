@@ -12,7 +12,12 @@ import {
 export default class EmptyTab extends Component {
 
   componentDidMount() {
-    this.props.onShown();
+    const {
+      onShown,
+      tab
+    } = this.props;
+
+    onShown(tab);
   }
 
   render() {
