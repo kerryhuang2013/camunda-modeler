@@ -21,6 +21,8 @@ import 'dmn-js/dist/assets/dmn-js-shared.css';
 
 import 'dmn-js-properties-panel/dist/assets/dmn-js-properties-panel.css';
 
+import { reduce } from 'min-dash';
+
 
 export default class CamundaDmnModeler extends DmnModeler {
 
@@ -81,6 +83,28 @@ export default class CamundaDmnModeler extends DmnModeler {
 
     });
 
+  }
+
+  /**
+   * Get stack indexes for all viewers.
+   *
+   * @returns {Object}
+   */
+  getStackIdxs() {
+    return reduce(this._viewers, (stackIdxs, viewer, key) => {
+      const commandStack = viewer.get('commandStack', false);
+
+      if (!commandStack) {
+        return stackIdxs;
+      }
+
+      const stackIdx = commandStack._stackIdx;
+
+      return {
+        ...stackIdxs,
+        [ key ]: stackIdx
+      };
+    }, {});
   }
 
 }

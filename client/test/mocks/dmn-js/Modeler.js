@@ -1,5 +1,37 @@
 import { assign } from 'min-dash';
 
+class CommandStack {
+  constructor() {
+    this._stackIdx = -1;
+    this._maxStackIdx = this._stackIdx;
+  }
+
+  execute(commands) {
+    this._stackIdx += commands;
+    this._maxStackIdx = this._stackIdx;
+  }
+
+  undo() {
+    if (this.canUndo()) {
+      this._stackIdx--;
+    }
+  }
+
+  redo() {
+    if (this.canRedo()) {
+      this._stackIdx++;
+    }
+  }
+
+  canRedo() {
+    return this._stackIdx < this._maxStackIdx;
+  }
+
+  canUndo() {
+    return this._stackIdx > -1;
+  }
+}
+
 class PropertiesPanel {
   attachTo() {}
 
@@ -20,11 +52,7 @@ class Viewer {
       canvas: {
         resized() {}
       },
-      commandstack: {
-        canRedo() {},
-        canUndo() {},
-        stackIdx: -1
-      },
+      commandStack: new CommandStack(),
       propertiesPanel: new PropertiesPanel(),
       sheet: {
         resized() {}
@@ -59,10 +87,14 @@ export default class Modeler {
     this.modules = modules;
 
     this.xml = null;
+
+    this.viewer = null;
   }
 
   importXML(xml, options, done) {
     this.xml = xml;
+
+    this.viewer = new Viewer(this.xml, this.modules);
 
     const error = xml === 'import-error' ? new Error('error') : null;
 
@@ -72,15 +104,15 @@ export default class Modeler {
   }
 
   getActiveView() {
-    return this.activeView;
+    return this.activeView || { type: 'drd' };
   }
 
   getActiveViewer() {
-    return new Viewer(this.xml, this.modules);
+    return this.viewer || new Viewer(this.xml, this.modules);
   }
 
-  _getViewer(element) {
-    return new Viewer(this.xml, this.modules);
+  _getViewer() {
+    return this.viewer || new Viewer(this.xml, this.modules);
   }
 
   saveXML(options, done) {
@@ -94,7 +126,7 @@ export default class Modeler {
     return done(null, xml);
   }
 
-  _getInitialView(views) {
+  _getInitialView() {
     return { type: 'drd' };
   }
 
@@ -119,6 +151,18 @@ export default class Modeler {
   on() {}
 
   off() {}
+
+  getStackIdxs() {
+    const viewer = this.viewer || new Viewer(this.xml, this.modules);
+
+    const commandStack = viewer.get('commandStack');
+
+    const stackIdx = commandStack._stackIdx;
+
+    return {
+      drd: stackIdx
+    };
+  }
 }
 
 Modeler.prototype._modules = [];

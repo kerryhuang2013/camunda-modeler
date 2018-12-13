@@ -32,7 +32,14 @@ import css from './DmnEditor.less';
 
 import generateImage from '../../util/generateImage';
 
-import { assign } from 'min-dash';
+import {
+  assign,
+  isNumber,
+  isString,
+  reduce
+} from 'min-dash';
+
+const EXPORT_AS = [ 'svg', 'png' ];
 
 
 export class DmnEditor extends CachedComponent {
@@ -78,8 +85,13 @@ export class DmnEditor extends CachedComponent {
     modeler.detach();
   }
 
-  componentDidUpdate() {
-    if (!this.state.importing) {
+  componentDidUpdate(prevProps) {
+    if (isImporting(this.state)) {
+      return;
+    }
+
+    if (isSheetChange(prevProps, this.props) ||
+        isXMLChange(prevProps.xml, this.props.xml)) {
       this.checkImport();
     }
   }
@@ -114,20 +126,21 @@ export class DmnEditor extends CachedComponent {
   }
 
   checkDirty = () => {
-    const {
-      modeler
+    let {
+      modeler,
+      stackIdxs
     } = this.getCached();
 
-    return modeler.getViews().reduce((dirty, view) => {
-      const viewer = modeler._getViewer(view);
+    if (!stackIdxs) {
+      stackIdxs = {};
+    }
 
-      const commandStack = viewer.get('commandStack', false);
-
-      if (!commandStack) {
-        return dirty;
+    return reduce(modeler.getStackIdxs(), (dirty, stackIdx, key) => {
+      if (!isNumber(stackIdxs[ key ]) || stackIdxs[ key ] !== stackIdx) {
+        return true;
       }
 
-      return dirty || commandStack.canUndo();
+      return dirty;
     }, false);
   }
 
@@ -147,10 +160,15 @@ export class DmnEditor extends CachedComponent {
       modeler
     } = this.getCached();
 
+    const stackIdxs = modeler.getStackIdxs();
+
     onImport(error, warnings);
 
     if (!error) {
-      modeler.lastXML = xml;
+      this.setCached({
+        lastXML: xml,
+        stackIdxs
+      });
 
       this.setState({
         importing: false
@@ -229,7 +247,7 @@ export class DmnEditor extends CachedComponent {
     modeler.getActiveViewer().get('commandStack').redo();
   }
 
-  handleChanged = (event) => {
+  handleChanged = () => {
     const {
       modeler
     } = this.getCached();
@@ -256,7 +274,7 @@ export class DmnEditor extends CachedComponent {
       copy: false,
       cut: false,
       dirty,
-      exportAs: 'saveSVG' in activeViewer ? [ 'svg', 'png' ] : false,
+      exportAs: 'saveSVG' in activeViewer ? EXPORT_AS : false,
       inputActive,
       paste: false,
       propertiesPanel: true,
@@ -332,6 +350,7 @@ export class DmnEditor extends CachedComponent {
 
   checkImport = () => {
     const {
+      lastXML,
       modeler
     } = this.getCached();
 
@@ -340,16 +359,14 @@ export class DmnEditor extends CachedComponent {
       xml
     } = this.props;
 
-    if (xml !== modeler.lastXML) {
+    if (isXMLChange(lastXML, xml)) {
       this.setState({
         importing: true
       });
 
       modeler.importXML(xml, { open: false }, this.ifMounted(this.handleImport));
-    } else {
-      activeSheet
-        && activeSheet.element
-        && this.open(activeSheet.element);
+    } else if (activeSheet && activeSheet.element) {
+      this.open(activeSheet.element);
     }
   }
 
@@ -372,8 +389,7 @@ export class DmnEditor extends CachedComponent {
       return;
     }
 
-    if (!activeView
-      || activeView.element !== element) {
+    if (!activeView || activeView.element !== element) {
 
       this.setCached({
         activeView: view
@@ -398,10 +414,15 @@ export class DmnEditor extends CachedComponent {
       modeler
     } = this.getCached();
 
+    const stackIdxs = modeler.getStackIdxs();
+
     return new Promise((resolve, reject) => {
 
       modeler.saveXML({ format: true }, (err, xml) => {
-        modeler.lastXML = xml;
+        this.setCached({
+          lastXML: xml,
+          stackIdxs
+        });
 
         if (err) {
           this.handleError({
@@ -504,11 +525,15 @@ export class DmnEditor extends CachedComponent {
   static createCachedState() {
     const modeler = new CamundaDmnModeler();
 
+    const stackIdxs = modeler.getStackIdxs();
+
     return {
-      modeler,
       __destroy: () => {
         modeler.destroy();
-      }
+      },
+      lastXML: null,
+      modeler,
+      stackIdxs
     };
   }
 
@@ -529,4 +554,24 @@ function getSheetName(view) {
   }
 
   return view.element.name || viewNames[view.type];
+}
+
+function isImporting(state) {
+  return state.importing;
+}
+
+function isSheetChange(prevProps, props) {
+  return prevProps.activeSheet !== props.activeSheet;
+}
+
+function isXMLChange(prevXML, xml) {
+  return trim(prevXML) !== trim(xml);
+}
+
+function trim(string) {
+  if (isString(string)) {
+    return string.trim();
+  }
+
+  return string;
 }
