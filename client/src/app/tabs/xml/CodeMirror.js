@@ -54,5 +54,11 @@ export default function create(options) {
 
   instance.destroy = function() { };
 
+  Object.defineProperty(instance, '_stackIdx', {
+    get() {
+      return this.doc.historySize().undo;
+    }
+  });
+
   return instance;
 }

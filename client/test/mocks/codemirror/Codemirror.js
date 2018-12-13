@@ -1,5 +1,7 @@
-export default function create() {
-  let value;
+export default function create(options = {}) {
+  let value = options.value || null,
+      undo = options.undo || 0,
+      redo = options.redo || 0;
 
   return {
     attachTo() {},
@@ -15,17 +17,33 @@ export default function create() {
       value = newValue;
     },
     refresh() {},
-    lastXML: null,
     doc: {
       clearHistory() {},
       historySize() {
         return {
-          undo: 0,
-          redo: 0
+          undo,
+          redo
         };
       },
-      undo() {},
-      redo() {}
+      undo() {
+        if (undo) {
+          undo--;
+          redo++;
+        }
+      },
+      redo() {
+        if (redo) {
+          undo++;
+          redo--;
+        }
+      },
+      execute(commands) {
+        undo += commands;
+        redo = 0;
+      }
+    },
+    get _stackIdx() {
+      return undo;
     }
   };
 }
