@@ -11,6 +11,8 @@ import {
   CachedComponent
 } from '../cached';
 
+import { isFunction } from 'min-dash';
+
 import css from './MultiSheetTab.less';
 
 
@@ -152,6 +154,12 @@ export class MultiSheetTab extends CachedComponent {
         this.handleWarning(warning);
       });
     }
+
+    const { xml } = this.props;
+
+    this.setCached({
+      lastXML: xml
+    });
   }
 
   /**
@@ -192,7 +200,7 @@ export class MultiSheetTab extends CachedComponent {
       onContextMenu
     } = this.props;
 
-    if (typeof onContextMenu === 'function') {
+    if (isFunction(onContextMenu)) {
       onContextMenu(event, activeSheet.type, context);
     }
 
