@@ -23,6 +23,10 @@ import getCmmnWindowMenu from './getCmmnWindowMenu';
 
 import generateImage from '../../util/generateImage';
 
+import { isString } from 'min-dash';
+
+const EXPORT_AS = [ 'svg', 'png' ];
+
 
 export class CmmnEditor extends CachedComponent {
 
@@ -70,6 +74,12 @@ export class CmmnEditor extends CachedComponent {
     propertiesPanel.detach();
   }
 
+  componentDidUpdate(prevProps) {
+    if (!isImporting(this.state) && isXMLChange(prevProps.xml, this.props.xml)) {
+      this.checkImport();
+    }
+  }
+
   ifMounted = (fn) => {
     return (...args) => {
       if (this._isMounted) {
@@ -94,12 +104,6 @@ export class CmmnEditor extends CachedComponent {
     });
 
     modeler[fn]('error', 1500, this.handleError);
-  }
-
-  componentDidUpdate() {
-    if (!this.state.importing) {
-      this.checkImport();
-    }
   }
 
   undo = () => {
@@ -146,14 +150,19 @@ export class CmmnEditor extends CachedComponent {
       xml
     } = this.props;
 
-    const {
-      modeler
-    } = this.getCached();
+    const { modeler } = this.getCached();
+
+    const commandStack = modeler.get('commandStack');
+
+    const stackIdx = commandStack._stackIdx;
 
     onImport(error, warnings);
 
     if (!error) {
-      modeler.lastXML = xml;
+      this.setCached({
+        lastXML: xml,
+        stackIdx
+      });
 
       this.setState({
         importing: false
@@ -170,6 +179,8 @@ export class CmmnEditor extends CachedComponent {
       onChanged
     } = this.props;
 
+    const dirty = this.checkDirty();
+
     const commandStack = modeler.get('commandStack');
     const selection = modeler.get('selection');
 
@@ -182,8 +193,9 @@ export class CmmnEditor extends CachedComponent {
       copy: false,
       cut: false,
       defaultCopyCutPaste: inputActive,
+      dirty,
       editLabel: !inputActive && !!selectionLength,
-      exportAs: [ 'svg', 'png' ],
+      exportAs: EXPORT_AS,
       find: !inputActive,
       globalConnectTool: !inputActive,
       handTool: !inputActive,
@@ -216,8 +228,20 @@ export class CmmnEditor extends CachedComponent {
     this.setState(newState);
   }
 
+  checkDirty() {
+    const {
+      modeler,
+      stackIdx
+    } = this.getCached();
+
+    const commandStack = modeler.get('commandStack');
+
+    return commandStack._stackIdx !== stackIdx;
+  }
+
   checkImport() {
     const {
+      lastXML,
       modeler
     } = this.getCached();
 
@@ -225,7 +249,7 @@ export class CmmnEditor extends CachedComponent {
       xml
     } = this.props;
 
-    if (xml !== modeler.lastXML) {
+    if (isXMLChange(lastXML, xml)) {
       this.setState({
         importing: true
       });
@@ -240,12 +264,18 @@ export class CmmnEditor extends CachedComponent {
       modeler
     } = this.getCached();
 
+    const commandStack = modeler.get('commandStack');
+
+    const stackIdx = commandStack._stackIdx;
+
     return new Promise((resolve, reject) => {
 
       // TODO(nikku): set current modeler version and name to the diagram
-
       modeler.saveXML({ format: true }, (err, xml) => {
-        modeler.lastXML = xml;
+        this.setCached({
+          lastXML: xml,
+          stackIdx
+        });
 
         if (err) {
           this.handleError({
@@ -377,15 +407,38 @@ export class CmmnEditor extends CachedComponent {
       position: 'absolute'
     });
 
+    const commandStack = modeler.get('commandStack');
+
+    const stackIdx = commandStack._stackIdx;
+
     return {
-      modeler,
       __destroy: () => {
         modeler.destroy();
-      }
+      },
+      lastXML: null,
+      modeler,
+      stackIdx
     };
   }
 
 }
 
-
 export default WithCache(WithCachedState(CmmnEditor));
+
+// helpers //////////
+
+function isImporting(state) {
+  return state.importing;
+}
+
+function isXMLChange(prevXML, xml) {
+  return trim(prevXML) !== trim(xml);
+}
+
+function trim(string) {
+  if (isString(string)) {
+    return string.trim();
+  }
+
+  return string;
+}
