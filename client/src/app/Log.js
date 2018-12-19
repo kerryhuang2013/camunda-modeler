@@ -90,6 +90,8 @@ export default class Log extends Component {
       if (expanded !== newExpanded) {
         onToggle(newExpanded);
       }
+
+      this.props.onResize();
     });
   }
 

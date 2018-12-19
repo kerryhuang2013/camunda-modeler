@@ -87,10 +87,8 @@ export class App extends Component {
 
     if (process.env.NODE_ENV !== 'test') {
       this.workspaceChanged = debounce(this.workspaceChanged, 300);
-    }
-
-    if (process.env.NODE_ENV !== 'test') {
       this.updateMenu = debounce(this.updateMenu, 50);
+      this.resizeTab = debounce(this.resizeTab, 50);
     }
   }
 
@@ -700,6 +698,12 @@ export class App extends Component {
         ...properties
       }
     });
+  }
+
+  resizeTab = () => {
+    const tab = this.tabRef.current;
+
+    return tab.triggerAction('resize');
   }
 
   markAsDirty(tab, dirty = true) {
@@ -1437,6 +1441,7 @@ export class App extends Component {
             expanded={ layout.log && layout.log.open }
             onToggle={ this.toggleLog }
             onClear={ this.clearLog }
+            onResize={ this.handleResize }
           />
         </SlotFillRoot>
 
