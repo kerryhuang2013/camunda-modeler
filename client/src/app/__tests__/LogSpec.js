@@ -284,6 +284,45 @@ describe('<Log>', function() {
   });
 
 
+  describe('resizing', function() {
+
+    afterEach(sinon.restore);
+
+    it('should throttle resizing by dragging', function() {
+
+      // given
+      const onResizeSpy = spy();
+      const FAKE_HEIGHT = 100;
+
+      const { instance } = createLog({
+        expanded: true,
+        onResize: onResizeSpy
+      });
+
+      const resizeFunction = instance.handleResize(FAKE_HEIGHT);
+
+      // when
+      const dragStartEvent = new DragEvent('dragstart');
+
+      const dragEvent = new CustomEvent('drag');
+      dragEvent.x = 10;
+
+      const dragEvent2 = new CustomEvent('drag');
+      dragEvent2.x = 20;
+
+      resizeFunction(dragStartEvent);
+
+      document.dispatchEvent(dragEvent);
+      document.dispatchEvent(dragEvent2);
+
+      // then
+      expect(onResizeSpy).to.have.been.calledOnce;
+
+      document.dispatchEvent(new DragEvent('dragend'));
+    });
+
+  });
+
 });
 
 
@@ -300,6 +339,7 @@ function createLog(options = {}, mountFn=shallow) {
 
   const tree = mountFn(
     <Log
+      { ...options }
       entries={ options.entries || [] }
       expanded={ options.expanded || false }
       onToggle={ options.onToggle || noop }

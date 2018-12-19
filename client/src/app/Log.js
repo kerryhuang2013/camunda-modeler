@@ -1,11 +1,16 @@
 import React, { Component } from 'react';
 
-import css from './Log.less';
+import {
+  throttle
+} from 'min-dash';
 
 import classNames from 'classnames';
 
+import css from './Log.less';
+
 import dragger from '../util/dom/dragger';
 
+const THROTTLING_INTERVAL = 20;
 
 const DEFAULT_HEIGHT = 130;
 
@@ -67,7 +72,7 @@ export default class Log extends Component {
    */
   handleResize = (originalHeight) => {
 
-    return dragger((event, delta) => {
+    return dragger(throttle((event, delta) => {
       const {
         y
       } = delta;
@@ -92,7 +97,7 @@ export default class Log extends Component {
       }
 
       this.props.onResize();
-    });
+    }, THROTTLING_INTERVAL));
   }
 
   checkFocus = () => {

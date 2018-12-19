@@ -1,11 +1,17 @@
 import React, { Component } from 'react';
 
+import {
+  throttle
+} from 'min-dash';
+
 import classNames from 'classnames';
 
 import dragger from '../../util/dom/dragger';
 
 import css from './PropertiesContainer.less';
 
+
+const THROTTLING_INTERVAL = 20;
 
 const DEFAULT_LAYOUT = {
   open: false,
@@ -58,7 +64,7 @@ class PropertiesContainerWrapped extends Component {
    */
   handleResize = (originalWidth) => {
 
-    return dragger((event, delta) => {
+    return dragger(throttle((event, delta) => {
       const {
         x
       } = delta;
@@ -75,7 +81,7 @@ class PropertiesContainerWrapped extends Component {
           width
         }
       });
-    });
+    }, THROTTLING_INTERVAL));
   }
 
   render() {
